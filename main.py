@@ -2,7 +2,10 @@ import pygame
 import random
 import math
 from enemy import Enemy
+from bullet import Bullet
 import asyncio
+from pygame import mixer
+from typing import Literal
 
 pygame.init()
 
@@ -11,7 +14,13 @@ HEIGHT = 600
 FPS = 60
 
 PLAYER_SPEED = 5
-BULLET_SPEED = 8
+PLAYER_BULLET_SPEED = 12
+
+SOUNDS_VOLUME = 0.2
+
+enemySpeed = 2
+enemyCount = 1
+enemyBulletSpeed = 4
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 # screen.fill((150, 150, 150))
@@ -21,19 +30,19 @@ pygame.display.set_caption('Invaders Game')
 playerImg = pygame.image.load('player.png')
 playerX, playerY = 370, 480
 playerXChange = 0
-
-enemySpeed = 2
-enemyCount = 1
+playerBulletState: Literal['ready', 'fired'] = 'ready'
 
 def newEnemy() -> Enemy:
     return Enemy('enemy.png', random.randint(0, 736), random.randint(50, 150), enemySpeed)
 
 enemies: list[Enemy] = [newEnemy()]
 
-bulletImg = pygame.image.load('bullet.png')
-bulletX, bulletY = 0, 480
-bulletXChange, bulletYChange = 0, BULLET_SPEED
-bulletState = 'ready'
+# bulletImg = pygame.image.load('bullet.png')
+# bulletX, bulletY = 0, 480
+# bulletXChange, bulletYChange = 0, BULLET_SPEED
+# bulletState = 'ready'
+
+bullets: list[Bullet] = []
 
 scoreValue = 0
 stageCount = 1
@@ -42,19 +51,21 @@ font = pygame.font.SysFont(None, 76)
 gameOverText = font.render("GameOver", True, (255, 0, 0))
 gameOverRect = gameOverText.get_rect(center=(WIDTH//2, HEIGHT//2))
 
+shootingSound = mixer.Sound('laser.wav')
+shootingSound.set_volume(SOUNDS_VOLUME)
+
+mixer.music.load("background.wav")
+mixer.music.set_volume(SOUNDS_VOLUME)
+mixer.music.play(-1, 0, 5)
+
 clock = pygame.time.Clock()
 
 
 async def main():
-    global playerX, playerY, playerXChange, enemySpeed, enemyCount, enemies, bulletX, bulletY, bulletXChange, bulletYChange, bulletState, scoreValue, stageCount
+    global playerX, playerY, playerXChange, playerBulletState, enemySpeed, enemyCount, enemyBulletSpeed, enemies, bullets, scoreValue, stageCount
     
     def player(x, y):
         screen.blit(playerImg, (x, y))
-
-    def fire_bullet(x, y):
-        global bulletState
-        bulletState = 'fire'
-        screen.blit(bulletImg, (x + 16, y + 16))
 
     def isCollision(enemyX, enemyY, bulletX, bulletY):
         distance = math.sqrt(math.pow(enemyX - bulletX, 2) + math.pow(enemyY - bulletY, 2))
@@ -66,6 +77,13 @@ async def main():
     def killEnemy(target: Enemy):
         global enemies
         enemies = list(filter(lambda e: target is not e, enemies))
+        
+    def fireBullet(x: int, y: int, isFromPlayer: bool) -> Bullet:
+        bullets.append(Bullet('bullet.png', x, y, PLAYER_BULLET_SPEED if isFromPlayer else enemyBulletSpeed, isFromPlayer))
+    
+    def deleteBullet(target: Bullet):
+        global bullets
+        bullets = list(filter(lambda b: target is not b, bullets))
 
     endFlag = False
     gameOver = False
@@ -82,11 +100,9 @@ async def main():
                     playerXChange = -PLAYER_SPEED
                 if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                     playerXChange = PLAYER_SPEED
-                if event.key == pygame.K_SPACE:
-                    if bulletState is 'ready':
-                        bulletX = playerX
-                        fire_bullet(bulletX, bulletY)
-                        print(bulletState)
+                if event.key == pygame.K_SPACE and playerBulletState == 'ready':
+                    fireBullet(playerX, playerY, True)
+                    playerBulletState = 'fired'
                 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT or event.key == pygame.K_a or event.key == pygame.K_d:
@@ -110,46 +126,56 @@ async def main():
                         enemy.y += enemy.yChange
                 else:
                     gameOver = True
-                collision = isCollision(enemy.x, enemy.y, bulletX, bulletY)
-                if collision:
-                    bulletY = 480
-                    print("Collision")
-                    bulletState = 'ready'
-                    scoreValue += 1
-                    killEnemy(enemy)
+                    break
                 
-                    if len(enemies) == 0:
-                        stageCount += 1
+                if random.random() <= 0.01:
+                    fireBullet(enemy.x, enemy.y, False)
                         
-                        if stageCount % 5 == 0:
-                            enemySpeed += 1
-                        if stageCount % 10 == 0:
-                            enemyCount += 1
-
-                        print(enemyCount)
-                    
-                        enemies = [newEnemy() for _ in range(enemyCount)]
-                    
         
-            if bulletY <= 0:
-                bulletY = 480
-                print("Zero")
-                bulletState = 'ready'
+            for bullet in bullets:
+                if bullet.y <= 0:
+                    playerBulletState = 'ready'
+                    deleteBullet(bullet)
+                    continue
+                bullet.y -= bullet.yChange
+                bullet.render(screen)
+                
+                if bullet.isFromPlayer:
+                    for enemy in enemies:      
+                        collision = isCollision(enemy.x, enemy.y, bullet.x, bullet.y)
+                        if collision:
+                            scoreValue += 1
+                            killEnemy(enemy)
+                        
+                            if len(enemies) == 0:
+                                stageCount += 1
+                                
+                                if stageCount % 5 == 0:
+                                    enemyCount += 1
+                                if stageCount % 10 == 0:
+                                    enemySpeed += 2
+                                    enemyBulletSpeed = min(20, enemyBulletSpeed + 2)
 
-            if bulletState is 'fire':
-                fire_bullet(bulletX, bulletY)
-                bulletY -= bulletYChange
+                                enemies = [newEnemy() for _ in range(enemyCount)]
+                            
+                            playerBulletState = 'ready'
+                            deleteBullet(bullet)
+                            continue
+                else:
+                    collision = isCollision(playerX, playerY, bullet.x, bullet.y)
+                    if collision:
+                        gameOver = True
+                        break
 
             font = pygame.font.SysFont(None, 32)
             score = font.render(f"Score : {str(scoreValue)}", True, (255, 255, 255))
             screen.blit(score, (20, 50))
-        
+            
+            player(playerX, playerY)
+            for enemy in enemies:
+                enemy.render(screen)
         else:
             screen.blit(gameOverText, gameOverRect)
-
-        player(playerX, playerY)
-        for enemy in enemies:
-            enemy.render(screen)
 
         clock.tick(FPS)
         await asyncio.sleep(0)

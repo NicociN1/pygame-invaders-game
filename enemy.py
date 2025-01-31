@@ -5,7 +5,6 @@ class Enemy:
     img: Surface
     x: int
     y: int
-    speed: float
     xChange: int
     yChange: int = 40
     
@@ -13,7 +12,6 @@ class Enemy:
         self.img = pygame.image.load(imgPath)
         self.x = initX
         self.y = initY
-        self.speed = speed
         self.xChange = speed
     
     def render(self, screen: Surface):
