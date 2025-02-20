@@ -9,6 +9,12 @@ from typing import Literal
 
 pygame.init()
 
+PLAYER_PATH = "assets/player.png"
+BULLET_PATH = "assets/bullet.png"
+ENEMY_PATH = "assets/enemy.png"
+BGM_PATH = "assets/background.wav"
+LASER_SOUND_PATH = "assets/laser.wav"
+
 WIDTH = 800
 HEIGHT = 600
 FPS = 60
@@ -27,20 +33,15 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption('Invaders Game')
 
 # Player
-playerImg = pygame.image.load('player.png')
+playerImg = pygame.image.load(PLAYER_PATH)
 playerX, playerY = 370, 480
 playerXChange = 0
 playerBulletState: Literal['ready', 'fired'] = 'ready'
 
 def newEnemy() -> Enemy:
-    return Enemy('enemy.png', random.randint(0, 736), random.randint(50, 150), enemySpeed)
+    return Enemy(ENEMY_PATH, random.randint(0, 736), random.randint(50, 150), enemySpeed)
 
 enemies: list[Enemy] = [newEnemy()]
-
-# bulletImg = pygame.image.load('bullet.png')
-# bulletX, bulletY = 0, 480
-# bulletXChange, bulletYChange = 0, BULLET_SPEED
-# bulletState = 'ready'
 
 bullets: list[Bullet] = []
 
@@ -51,10 +52,10 @@ font = pygame.font.SysFont(None, 76)
 gameOverText = font.render("GameOver", True, (255, 0, 0))
 gameOverRect = gameOverText.get_rect(center=(WIDTH//2, HEIGHT//2))
 
-shootingSound = mixer.Sound('laser.wav')
+shootingSound = mixer.Sound(LASER_SOUND_PATH)
 shootingSound.set_volume(SOUNDS_VOLUME)
 
-mixer.music.load("background.wav")
+mixer.music.load(BGM_PATH)
 mixer.music.set_volume(SOUNDS_VOLUME)
 mixer.music.play(-1, 0, 5)
 
@@ -79,7 +80,7 @@ async def main():
         enemies = list(filter(lambda e: target is not e, enemies))
         
     def fireBullet(x: int, y: int, isFromPlayer: bool) -> Bullet:
-        bullets.append(Bullet('bullet.png', x, y, PLAYER_BULLET_SPEED if isFromPlayer else enemyBulletSpeed, isFromPlayer))
+        bullets.append(Bullet(BULLET_PATH, x, y, PLAYER_BULLET_SPEED if isFromPlayer else enemyBulletSpeed, isFromPlayer))
     
     def deleteBullet(target: Bullet):
         global bullets
