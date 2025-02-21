@@ -9,11 +9,11 @@ from typing import Literal
 
 pygame.init()
 
-PLAYER_PATH = "assets/player.png"
-BULLET_PATH = "assets/bullet.png"
-ENEMY_PATH = "assets/enemy.png"
-BGM_PATH = "assets/background.wav"
-LASER_SOUND_PATH = "assets/laser.wav"
+PLAYER_PATH = "libs/player.png"
+BULLET_PATH = "libs/bullet.png"
+ENEMY_PATH = "libs/enemy.png"
+BGM_PATH = "libs/background.wav"
+LASER_SOUND_PATH = "libs/laser.wav"
 
 WIDTH = 800
 HEIGHT = 600
@@ -90,7 +90,7 @@ async def main():
     gameOver = False
 
     while endFlag == False:
-        screen.fill((0, 255, 0))
+        screen.fill((0, 0, 0))
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
