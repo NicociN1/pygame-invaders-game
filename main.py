@@ -90,7 +90,7 @@ async def main():
     gameOver = False
 
     while endFlag == False:
-        screen.fill((0, 0, 0))
+        screen.fill((0, 255, 0))
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
