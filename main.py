@@ -23,7 +23,6 @@ enemyCount = 1
 enemyBulletSpeed = 4
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-# screen.fill((150, 150, 150))
 pygame.display.set_caption('Invaders Game')
 
 # Player
@@ -36,11 +35,6 @@ def newEnemy() -> Enemy:
     return Enemy('enemy.png', random.randint(0, 736), random.randint(50, 150), enemySpeed)
 
 enemies: list[Enemy] = [newEnemy()]
-
-# bulletImg = pygame.image.load('bullet.png')
-# bulletX, bulletY = 0, 480
-# bulletXChange, bulletYChange = 0, BULLET_SPEED
-# bulletState = 'ready'
 
 bullets: list[Bullet] = []
 
