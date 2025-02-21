@@ -9,11 +9,11 @@ from typing import Literal
 
 pygame.init()
 
-PLAYER_PATH = "player.png"
-BULLET_PATH = "bullet.png"
-ENEMY_PATH = "enemy.png"
-BGM_PATH = "background.wav"
-LASER_SOUND_PATH = "laser.wav"
+PLAYER_PATH = "assets/player.png"
+BULLET_PATH = "assets/bullet.png"
+ENEMY_PATH = "assets/enemy.png"
+BGM_PATH = "assets/background.wav"
+LASER_SOUND_PATH = "assets/laser.wav"
 
 WIDTH = 800
 HEIGHT = 600
